@@ -1,0 +1,13 @@
+model {
+    List<app.Genre> genres
+}
+
+json {
+    genresList genres.collect { app.Genre genre ->
+        return [
+            id: genre.id,
+            name: genre.name,
+            description: genre.description
+        ]
+    }
+}

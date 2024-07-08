@@ -4,7 +4,9 @@ import app.request.AuthorRequestDTO
 
 class AuthorController {
 
-    AuthorService authorService
+    def authorService
+
+    static responseFormats = ['json', 'xml']
 
     def getAuthorsWithDetails(Integer max, Integer offset) {
         max = max ?: 5
@@ -13,12 +15,13 @@ class AuthorController {
         def totalAuthors = authorService.getTotalAuthorsCount()
         def authors = totalAuthors > 0 ? authorService.getAuthorsWithDetails(max, offset, totalAuthors) : []
 
-        respond([authors: authors, totalAuthors: totalAuthors], formats: ['json'])
+        respond([authors: authors, totalAuthors: totalAuthors], view: 'authorsWithDetails')
     }
 
     def getAuthorsList() {
         def authorsList = authorService.getAuthorsList()
-        respond authorsList ?: [], formats: ['json']
+
+        respond([authorsList: authorsList], view: 'authorsList')
     }
 
     def createAuthor(AuthorRequestDTO authorDTO) {
@@ -28,7 +31,7 @@ class AuthorController {
         }
 
         def result = authorService.addAuthor(authorDTO)
-        respond([message: result.message, author: result.author], status: result.status, formats: ['json'])
+        respond([message: result.message, author: result.author], status: result.status)
     }
 
     def updateAuthor(Long id, AuthorRequestDTO authorDTO) {
@@ -38,12 +41,11 @@ class AuthorController {
         }
 
         def result = authorService.updateAuthor(id, authorDTO)
-        respond([message: result.message, author: result.author], status: result.status, formats: ['json'])
+        respond([message: result.message, author: result.author], status: result.status)
     }
 
     def deleteAuthor(Long id) {
         def result = authorService.deleteAuthor(id)
-        respond([message: result.message], status: result.status, formats: ['json'])
+        respond([message: result.message, author: result.author], status: result.status)
     }
 }
-

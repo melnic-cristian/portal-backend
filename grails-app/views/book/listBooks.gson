@@ -1,0 +1,27 @@
+model {
+    List<app.Book> books
+    int totalBooks
+}
+
+json {
+    books books.collect { app.Book book ->
+        return [
+            id: book.id,
+            title: book.title,
+            isbn: book.isbn,
+            summary: book.summary,
+            publicDate: book.publicDate,
+            imageLink: book.imageLink,
+            genre: book.genre?.name,
+            authors: book.bookAuthors.collect { bookAuthor ->
+                return [
+                    id: bookAuthor.author.id,
+                    firstName: bookAuthor.author.firstName,
+                    lastName: bookAuthor.author.lastName,
+                    biography: bookAuthor.author.biography
+                ]
+            }
+        ]
+    }
+    totalBooks totalBooks
+}

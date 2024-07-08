@@ -1,0 +1,13 @@
+model {
+    List<app.Author> authorsList
+}
+
+json {
+    authorsList authorsList.collect { app.Author author ->
+        [
+            id: author.id,
+            firstName: author.firstName,
+            lastName: author.lastName
+        ]
+    }
+}

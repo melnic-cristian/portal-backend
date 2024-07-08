@@ -1,0 +1,15 @@
+model {
+    String message
+    app.Genre genre
+}
+
+json {
+    message message
+    if (genre) {
+        genre {
+            id genre.id
+            name genre.name
+            description genre.description
+        }
+    }
+}

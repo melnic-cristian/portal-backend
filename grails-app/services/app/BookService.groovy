@@ -1,17 +1,13 @@
 package app
 
-import app.internal.BookDTO
-import app.internal.AuthorDTO
-import app.internal.BookWithDetailsDTO
 import app.request.BookRequestDTO
-import app.response.BookResponseDTO
 import grails.gorm.transactions.Transactional
 import org.springframework.http.HttpStatus
 
 class BookService {
 
     @Transactional
-    BookResponseDTO addBook(BookRequestDTO bookRequestDTO) {
+    Map addBook(BookRequestDTO bookRequestDTO) {
         def book = new Book(
                 title: bookRequestDTO.title,
                 isbn: bookRequestDTO.isbn,
@@ -23,7 +19,7 @@ class BookService {
         if (bookRequestDTO.genreId) {
             Genre genre = Genre.get(bookRequestDTO.genreId)
             if (!genre) {
-                return new BookResponseDTO('Genre not found', HttpStatus.NOT_FOUND)
+                return [message: 'Genre not found', status: HttpStatus.NOT_FOUND]
             } else {
                 book.genre = genre
             }
@@ -37,25 +33,23 @@ class BookService {
                 }
             }
             book.refresh()
-            def authorInfo = book.bookAuthors.collect { new AuthorDTO(it.author) }
-            def bookWithDetailsDTO = new BookWithDetailsDTO(book, authorInfo)
-            return new BookResponseDTO('Book created successfully', HttpStatus.CREATED, bookWithDetailsDTO)
+            return [message: 'Book created successfully', status: HttpStatus.CREATED, book: book]
         } else {
-            return new BookResponseDTO('Error creating book', HttpStatus.INTERNAL_SERVER_ERROR)
+            return [message: 'Error creating book', status: HttpStatus.INTERNAL_SERVER_ERROR]
         }
     }
 
     @Transactional
-    BookResponseDTO updateBook(Long bookId, BookRequestDTO bookRequestDTO) {
+    Map updateBook(Long bookId, BookRequestDTO bookRequestDTO) {
         Book book = Book.get(bookId)
         if (!book) {
-            return new BookResponseDTO('Book not found', HttpStatus.NOT_FOUND)
+            return [message: 'Book not found', status: HttpStatus.NOT_FOUND]
         }
 
         if (bookRequestDTO.genreId) {
             Genre genre = Genre.get(bookRequestDTO.genreId)
             if (!genre) {
-                return new BookResponseDTO('Genre not found', HttpStatus.NOT_FOUND)
+                return [message: 'Genre not found', status: HttpStatus.NOT_FOUND]
             }
             book.genre = genre
         } else {
@@ -77,39 +71,37 @@ class BookService {
                 }
             }
             book.refresh()
-            def authorInfo = book.bookAuthors.collect { new AuthorDTO(it.author) }
-            def bookWithDetailsDTO = new BookWithDetailsDTO(book, authorInfo)
-            return new BookResponseDTO('Book updated successfully', HttpStatus.OK, bookWithDetailsDTO)
+            return [message: 'Book updated successfully', status: HttpStatus.OK, book: book]
         } else {
-            return new BookResponseDTO('Error updating book', HttpStatus.INTERNAL_SERVER_ERROR)
+            return [message: 'Error updating book', status: HttpStatus.INTERNAL_SERVER_ERROR]
         }
     }
 
     @Transactional
-    BookResponseDTO deleteBook(Long id) {
+    Map deleteBook(Long id) {
         def book = Book.get(id)
         if (book) {
             book.delete(flush: true)
-            return new BookResponseDTO('Book deleted successfully', HttpStatus.NO_CONTENT)
+            return [message: 'Book deleted successfully', status: HttpStatus.NO_CONTENT]
         } else {
-            return new BookResponseDTO('Book not found to be deleted', HttpStatus.NOT_FOUND)
+            return [message: 'Book not found to be deleted', status: HttpStatus.NOT_FOUND]
         }
     }
 
-    def getTotalBooksCount(String query = null) {
+    int getTotalBooksCount(String query = null) {
         if (query) {
-            Book.createCriteria().get {
+            return Book.createCriteria().get {
                 projections {
                     count()
                 }
                 ilike("title", "%${query}%")
-            }
+            } as int
         } else {
-            Book.count()
+            return Book.count() as int
         }
     }
 
-    List<BookWithDetailsDTO> getAllBooks(int max = 5, int offset = 0, String query = '') {
+    List<Book> getAllBooks(int max = 5, int offset = 0, String query = '') {
         query = query?.trim()?.toLowerCase() ?: ''
 
         def totalBooks = Book.createCriteria().count {
@@ -124,7 +116,7 @@ class BookService {
 
         max = Math.min(max, totalBooks - offset)
 
-        List<Book> books = Book.createCriteria().list {
+        return Book.createCriteria().list {
             if (query) {
                 or {
                     ilike('title', "%${query}%")
@@ -134,23 +126,15 @@ class BookService {
             firstResult(offset)
             order("lastUpdated", "desc")
         }
-
-        books.collect { book ->
-            List<AuthorDTO> authorDTOs = book.bookAuthors.collect { new AuthorDTO(it.author) }
-            new BookWithDetailsDTO(book, authorDTOs)
-        }
     }
 
-
-
-    List<BookDTO> getBooksByAuthor(Long authorId) {
-        List<Book> books = Book.createCriteria().list {
+    List<Book> getBooksByAuthor(Long authorId) {
+        return Book.createCriteria().list {
             bookAuthors {
                 author {
                     eq('id', authorId)
                 }
             }
         }
-        books.collect { new BookDTO(it) }
     }
 }

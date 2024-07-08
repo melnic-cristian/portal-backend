@@ -4,7 +4,9 @@ import app.request.BookRequestDTO
 
 class BookController {
 
-    BookService bookService
+    def bookService
+
+    static responseFormats = ['json', 'xml']
 
     def listBooks(Integer max, Integer offset, String query) {
         max = max ?: 5
@@ -18,12 +20,12 @@ class BookController {
         int totalBooks = bookService.getTotalBooksCount(query) as int
         def books = totalBooks > 0 ? bookService.getAllBooks(max, offset, query) : []
 
-        respond([books: books, totalBooks: totalBooks], formats: ['json'])
+        respond([books: books, totalBooks: totalBooks], view: 'listBooks')
     }
 
     def getBooksByAuthor(Long authorId) {
         def books = bookService.getBooksByAuthor(authorId)
-        respond books ?: [], formats: ['json']
+        respond([books: books], view: 'getBooksByAuthor')
     }
 
     def createBook(BookRequestDTO bookDTO) {
@@ -32,7 +34,7 @@ class BookController {
             return
         }
         def response = bookService.addBook(bookDTO)
-        respond([message: response.message, book: response.book], status: response.status, formats: ['json'])
+        respond([message: response.message, book: response.book], status: response.status, view: 'bookResponse')
     }
 
     def updateBook(Long id, BookRequestDTO bookDTO) {
@@ -41,11 +43,11 @@ class BookController {
             return
         }
         def response = bookService.updateBook(id, bookDTO)
-        respond([message: response.message, book: response.book], status: response.status, formats: ['json'])
+        respond([message: response.message, book: response.book], status: response.status, view: 'bookResponse')
     }
 
     def deleteBook(Long id) {
         def response = bookService.deleteBook(id)
-        respond([message: response.message], status: response.status, formats: ['json'])
+        respond([message: response.message], status: response.status)
     }
 }

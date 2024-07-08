@@ -8,12 +8,12 @@ class AuthorRequestDTO implements Validateable {
     String biography
 
     static constraints = {
-        firstName blank: false, size: 2..100, validator: { val, obj ->
+        firstName blank: false, size: 1..100, validator: { val, obj ->
             if (!(val instanceof String) || !val.matches(/^[a-zA-Z]+$/)) {
                 return ['invalidCharacters']
             }
         }
-        lastName blank: false, size: 2..100, validator: { val, obj ->
+        lastName blank: false, size: 1..100, validator: { val, obj ->
             if (!(val instanceof String) || !val.matches(/^[a-zA-Z]+$/)) {
                 return ['invalidCharacters']
             }

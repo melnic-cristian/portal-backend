@@ -12,7 +12,7 @@ class BookRequestDTO implements Validateable {
     List<Long> authorIds
 
     static constraints = {
-        title nullable: false, size: 2..255
+        title nullable: false, size: 1..255
         summary nullable: false, size: 1..5000
         isbn nullable: true, size: 10..13, matches: /^\d{10}(\d{3})?$/
         imageLink nullable: true, url: true, size: 1..5000

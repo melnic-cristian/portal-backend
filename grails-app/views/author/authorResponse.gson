@@ -1,0 +1,18 @@
+model {
+    String message
+    app.Author author
+}
+
+json {
+    message message
+    if (author) {
+        author {
+            id author.id
+            firstName author.firstName
+            lastName author.lastName
+            biography author.biography
+            dateCreated author.dateCreated
+            lastUpdated author.lastUpdated
+        }
+    }
+}

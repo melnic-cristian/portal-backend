@@ -1,55 +1,56 @@
 package app
 
-import app.internal.AuthorDTO
-import app.internal.AuthorWithDetailsDTO
 import app.request.AuthorRequestDTO
-import app.response.AuthorResponseDTO
 import org.springframework.http.HttpStatus
 import grails.gorm.transactions.Transactional
 
 class AuthorService {
 
     @Transactional
-    AuthorResponseDTO addAuthor(AuthorRequestDTO authorRequestDTO) {
+    Map addAuthor(AuthorRequestDTO authorRequestDTO) {
         def author = new Author(
                 firstName: authorRequestDTO.firstName,
                 lastName: authorRequestDTO.lastName,
                 biography: authorRequestDTO.biography
         )
 
-        return author.save(flush: true) ?
-                new AuthorResponseDTO('Author created successfully', HttpStatus.CREATED, author) :
-                new AuthorResponseDTO('Error creating author', HttpStatus.INTERNAL_SERVER_ERROR)
+        if (author.save(flush: true)) {
+            return [message: 'Author created successfully', status: HttpStatus.CREATED, author: author]
+        } else {
+            return [message: 'Error creating author', status: HttpStatus.INTERNAL_SERVER_ERROR]
+        }
     }
 
     @Transactional
-    AuthorResponseDTO deleteAuthor(Long id) {
+    Map deleteAuthor(Long id) {
         def author = Author.get(id)
         if (!author) {
-            return new AuthorResponseDTO('Author not found to be deleted', HttpStatus.NOT_FOUND)
+            return [message: 'Author not found to be deleted', status: HttpStatus.NOT_FOUND]
         }
 
         if (author.bookAuthors) {
-            return new AuthorResponseDTO('Author cannot be deleted as they have associated books.', HttpStatus.BAD_REQUEST)
+            return [message: 'Author cannot be deleted as they have associated books.', status: HttpStatus.BAD_REQUEST]
         }
 
         author.delete(flush: true)
-        return new AuthorResponseDTO('Author deleted successfully', HttpStatus.NO_CONTENT)
+        return [message: 'Author deleted successfully', status: HttpStatus.NO_CONTENT]
     }
 
     @Transactional
-    AuthorResponseDTO updateAuthor(Long id, AuthorRequestDTO authorRequestDTO) {
+    Map updateAuthor(Long id, AuthorRequestDTO authorRequestDTO) {
         def author = Author.get(id)
         if (author) {
             author.firstName = authorRequestDTO.firstName
             author.lastName = authorRequestDTO.lastName
             author.biography = authorRequestDTO.biography
 
-            return author.save(flush: true) ?
-                    new AuthorResponseDTO('Author updated successfully', HttpStatus.OK, author) :
-                    new AuthorResponseDTO('Error updating author', HttpStatus.INTERNAL_SERVER_ERROR)
+            if (author.save(flush: true)) {
+                return [message: 'Author updated successfully', status: HttpStatus.OK, author: author]
+            } else {
+                return [message: 'Error updating author', status: HttpStatus.INTERNAL_SERVER_ERROR]
+            }
         } else {
-            return new AuthorResponseDTO('Author not found to be updated', HttpStatus.NOT_FOUND)
+            return [message: 'Author not found to be updated', status: HttpStatus.NOT_FOUND]
         }
     }
 
@@ -57,7 +58,7 @@ class AuthorService {
         Author.count()
     }
 
-    List<AuthorWithDetailsDTO> getAuthorsWithDetails(int max = 5, int offset = 0, int totalAuthors) {
+    List<Author> getAuthorsWithDetails(int max = 5, int offset = 0, int totalAuthors) {
         if (offset >= totalAuthors) return []
 
         max = Math.min(max, totalAuthors - offset)
@@ -68,10 +69,10 @@ class AuthorService {
             order("lastUpdated", "desc")
         }
 
-        authors.collect { author -> new AuthorWithDetailsDTO(author) }
+        return authors
     }
 
-    List<AuthorDTO> getAuthorsList() {
-        Author.list().collect { author -> new AuthorDTO(author) }
+    List<Author> getAuthorsList() {
+        Author.list()
     }
 }

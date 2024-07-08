@@ -1,0 +1,16 @@
+model {
+    List<app.Author> authors
+    int totalAuthors
+}
+
+json {
+    authors authors.collect { app.Author author ->
+        return [
+            id: author.id,
+            firstName: author.firstName,
+            lastName: author.lastName,
+            biography: author.biography
+        ]
+    }
+    totalAuthors totalAuthors
+}
