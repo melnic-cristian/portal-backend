@@ -24,7 +24,6 @@ class Author {
         firstName column: 'first_name'
         lastName column: 'last_name'
         biography column: 'biography', length: 5000
-        bookAuthors cascade: 'all-delete-orphan'
         version false
         dateCreated column: 'created_at'
         lastUpdated column: 'updated_at'

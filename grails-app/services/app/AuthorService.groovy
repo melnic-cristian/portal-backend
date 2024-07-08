@@ -25,12 +25,16 @@ class AuthorService {
     @Transactional
     AuthorResponseDTO deleteAuthor(Long id) {
         def author = Author.get(id)
-        if (author) {
-            author.delete(flush: true)
-            return new AuthorResponseDTO('Author deleted successfully', HttpStatus.NO_CONTENT)
-        } else {
+        if (!author) {
             return new AuthorResponseDTO('Author not found to be deleted', HttpStatus.NOT_FOUND)
         }
+
+        if (author.bookAuthors) {
+            return new AuthorResponseDTO('Author cannot be deleted as they have associated books.', HttpStatus.BAD_REQUEST)
+        }
+
+        author.delete(flush: true)
+        return new AuthorResponseDTO('Author deleted successfully', HttpStatus.NO_CONTENT)
     }
 
     @Transactional

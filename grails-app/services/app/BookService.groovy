@@ -12,18 +12,22 @@ class BookService {
 
     @Transactional
     BookResponseDTO addBook(BookRequestDTO bookRequestDTO) {
-        Genre genre = Genre.get(bookRequestDTO.genreId)
-        if (!genre) {
-            return new BookResponseDTO('Genre not found', HttpStatus.NOT_FOUND)
-        }
-
         def book = new Book(
                 title: bookRequestDTO.title,
                 isbn: bookRequestDTO.isbn,
+                summary: bookRequestDTO.summary,
                 publicDate: bookRequestDTO.publicDate,
-                genre: genre,
                 imageLink: bookRequestDTO.imageLink
         )
+
+        if (bookRequestDTO.genreId) {
+            Genre genre = Genre.get(bookRequestDTO.genreId)
+            if (!genre) {
+                return new BookResponseDTO('Genre not found', HttpStatus.NOT_FOUND)
+            } else {
+                book.genre = genre
+            }
+        }
 
         if (book.save(flush: true)) {
             bookRequestDTO.authorIds.each { authorId ->
@@ -48,15 +52,20 @@ class BookService {
             return new BookResponseDTO('Book not found', HttpStatus.NOT_FOUND)
         }
 
-        Genre genre = Genre.get(bookRequestDTO.genreId)
-        if (!genre) {
-            return new BookResponseDTO('Genre not found', HttpStatus.NOT_FOUND)
+        if (bookRequestDTO.genreId) {
+            Genre genre = Genre.get(bookRequestDTO.genreId)
+            if (!genre) {
+                return new BookResponseDTO('Genre not found', HttpStatus.NOT_FOUND)
+            }
+            book.genre = genre
+        } else {
+            book.genre = null
         }
 
         book.title = bookRequestDTO.title
         book.isbn = bookRequestDTO.isbn
+        book.summary = bookRequestDTO.summary
         book.publicDate = bookRequestDTO.publicDate
-        book.genre = genre
         book.imageLink = bookRequestDTO.imageLink
 
         if (book.save(flush: true)) {
@@ -87,16 +96,40 @@ class BookService {
         }
     }
 
-    def getTotalBooksCount() {
-        Book.count()
+    def getTotalBooksCount(String query = null) {
+        if (query) {
+            Book.createCriteria().get {
+                projections {
+                    count()
+                }
+                ilike("title", "%${query}%")
+            }
+        } else {
+            Book.count()
+        }
     }
 
-    List<BookWithDetailsDTO> getAllBooks(int max = 5, int offset = 0, int totalBooks) {
+    List<BookWithDetailsDTO> getAllBooks(int max = 5, int offset = 0, String query = '') {
+        query = query?.trim()?.toLowerCase() ?: ''
+
+        def totalBooks = Book.createCriteria().count {
+            if (query) {
+                or {
+                    ilike('title', "%${query}%")
+                }
+            }
+        }
+
         if (offset >= totalBooks) return []
 
         max = Math.min(max, totalBooks - offset)
 
         List<Book> books = Book.createCriteria().list {
+            if (query) {
+                or {
+                    ilike('title', "%${query}%")
+                }
+            }
             maxResults(max)
             firstResult(offset)
             order("lastUpdated", "desc")
@@ -107,6 +140,8 @@ class BookService {
             new BookWithDetailsDTO(book, authorDTOs)
         }
     }
+
+
 
     List<BookDTO> getBooksByAuthor(Long authorId) {
         List<Book> books = Book.createCriteria().list {

@@ -6,7 +6,7 @@ class GenreDTO {
     Long id
     String name
 
-    GenreDTO(Genre genre) {
+    GenreDTO(Genre genre ) {
         this.id = genre.id
         this.name = genre.name
     }

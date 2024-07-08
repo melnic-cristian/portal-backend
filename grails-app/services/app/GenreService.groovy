@@ -45,6 +45,10 @@ class GenreService {
             return new GenreResponseDTO('Genre not found to be deleted', HttpStatus.NOT_FOUND)
         }
 
+        if (genre.books) {
+            return new GenreResponseDTO('Genre cannot be deleted as it has associated books.', HttpStatus.BAD_REQUEST)
+        }
+
         genre.delete(flush: true)
         return new GenreResponseDTO('Genre deleted successfully', HttpStatus.NO_CONTENT)
     }

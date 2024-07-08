@@ -4,7 +4,7 @@ import app.request.AuthorRequestDTO
 
 class AuthorController {
 
-    def authorService
+    AuthorService authorService
 
     def getAuthorsWithDetails(Integer max, Integer offset) {
         max = max ?: 5

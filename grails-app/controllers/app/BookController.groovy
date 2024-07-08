@@ -6,11 +6,18 @@ class BookController {
 
     BookService bookService
 
-    def listBooks(Integer max, Integer offset) {
+    def listBooks(Integer max, Integer offset, String query) {
         max = max ?: 5
         offset = offset ?: 0
-        int totalBooks = bookService.getTotalBooksCount() as int
-        def books = totalBooks > 0 ? bookService.getAllBooks(max, offset, totalBooks) : []
+        query = query?.trim()?.toLowerCase() ?: ''
+
+        if (query == '') {
+            query = null
+        }
+
+        int totalBooks = bookService.getTotalBooksCount(query) as int
+        def books = totalBooks > 0 ? bookService.getAllBooks(max, offset, query) : []
+
         respond([books: books, totalBooks: totalBooks], formats: ['json'])
     }
 

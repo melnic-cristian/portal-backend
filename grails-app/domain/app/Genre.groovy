@@ -22,7 +22,6 @@ class Genre {
         name column: 'name', nullable: false
         description column: 'description', nullable: false, length: 5000
         version false
-        books cascade: 'all-delete-orphan'
         dateCreated column: 'created_at'
         lastUpdated column: 'updated_at'
     }
